@@ -12,7 +12,7 @@ def findBiggest(contours):
         area = int(rect[1][0] * rect[1][1])  # вычисление площади
         heigth, width = sidesOfBox(box)
         aspect_ratio = heigth / width
-        if 0.5 < aspect_ratio < 2.0:
+        if 0.4 < aspect_ratio < 2.3:
             if 10000 < area < 600000 and area > biggest_area:
                 biggest = box
                 biggest_area = area
@@ -27,11 +27,33 @@ def sidesOfBox(box):
     return height, width
 
 
+def adjustContrast(img):
+    lab = cv.cvtColor(img, cv.COLOR_BGR2LAB)
+
+    # -----Splitting the LAB image to different channels-------------------------
+    l, a, b = cv.split(lab)
+
+    # -----Applying CLAHE to L-channel-------------------------------------------
+    clahe = cv.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    cl = clahe.apply(l)
+
+    # -----Merge the CLAHE enhanced L-channel with the a and b channel-----------
+    limg = cv.merge((cl, a, b))
+
+    # -----Converting image from LAB Color model to RGB model--------------------
+    final = cv.cvtColor(limg, cv.COLOR_LAB2BGR)
+    return final
+
+
 def showContours(path):
     fn = path  # имя файла, который будем анализировать
     img = cv.imread(fn)
     img = cv.resize(img, (680, 880))
-
+    if img is None:
+        print('Could not open or find the image:', path)
+        exit(0)
+    img = adjustContrast(img)
+    cv.imshow("Contrasted", img)
     row, col = img.shape[:2]
     bottom = img[row - 2:row, 0:col]
     mean = cv.mean(bottom)[0]
@@ -67,6 +89,6 @@ def showContours(path):
 
 
 if __name__ == '__main__':
-    showContours('imgs/snils83.jpg')
-    showContours('imgs/snils85.jpg')
-    showContours('imgs/snils86.jpg')
+    showContours('imgs/snils415.jpg')
+    showContours('imgs/snils472.jpg')
+    showContours('imgs/snils553.jpg')
