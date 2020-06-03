@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+import matplotlib.pyplot as plt
 
 def adjustContrast(img):
     lab = cv.cvtColor(img, cv.COLOR_BGR2LAB)
@@ -41,15 +42,12 @@ def findBestRectangle(contours, ratio_lb, ratio_rb, area_lb, area_rb):
                 biggest = box
                 biggest_ratio = aspect_ratio
                 biggest_area = area
-                print(aspect_ratio)
-    print("ratio:" + str(biggest_ratio))
+                # print(aspect_ratio)
+    # print("ratio:" + str(biggest_ratio))
     return biggest
 
 
 def border_image(img):
-    row, col = img.shape[:2]
-    bottom = img[row - 2:row, 0:col]
-    mean = cv.mean(bottom)[0]
     bordersize = 15
     border = cv.copyMakeBorder(
         img,
@@ -58,18 +56,40 @@ def border_image(img):
         left=bordersize,
         right=bordersize,
         borderType=cv.BORDER_CONSTANT,
-        value=[mean, mean, mean]
+        value=[254, 254, 254]
     )
     img = border
     return img
 
 
-def dilate_erode(img):
-    kernel = np.ones((4, 4))
+def dilate(img, iter):
+    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (4, 4))
+    imgDial = cv.dilate(img, kernel, iterations=iter)  # APPLY DILATION
+    return imgDial
 
-    imgDial = cv.dilate(img, kernel, iterations=6)  # APPLY DILATION
-    cv.imshow("dilate", imgDial)
-    opening = cv.morphologyEx(imgDial, cv.MORPH_OPEN, kernel)
-    # imgThreshold = cv.erode(imgDial, kernel, iterations=2)  # APPLY EROSION
-    cv.imshow("erode", opening)
-    return opening
+
+def removeSmallContours(contours, image):
+    mask = np.ones(image.shape[:2], dtype="uint8") * 255
+    for cnt in contours:
+        if cv.arcLength(cnt, True) < 300:
+            cv.drawContours(mask, [cnt], -1, 0, -1)
+    image = cv.bitwise_and(image, image, mask=mask)
+    return image
+
+def plot_all_steps(imgs, labels):
+    rows = 2
+    cols = 4
+    axes = []
+    fig = plt.figure(figsize=(19.2,10.8))
+
+    for i in range(rows * cols):
+        axes.append(fig.add_subplot(rows, cols, i + 1))
+        subplot_title = (labels[i])
+        axes[-1].set_title(subplot_title)
+        plt.axis('off')
+        if i in (0, 7):
+            plt.imshow(imgs[i])
+        else:
+            plt.imshow(imgs[i], cmap='Greys_r')
+    fig.tight_layout()
+    plt.show()
