@@ -24,7 +24,7 @@ def showContours(path):
     secondDilated = utils.dilate(imgWithoutSmallContours, 2)
     contours1, hierarchy = cv.findContours(secondDilated.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
-    biggest = utils.findBestRectangle(contours1, 0.5, 1.9, 100000, 500000)
+    biggest = utils.findBestRectangle(contours1, 0.4, 2.1, 300000, 600000)
     if biggest.size != 0:
 
         cv.drawContours(img, [biggest], 0, (0, 0, 255), 2)
@@ -39,7 +39,7 @@ def showContours(path):
 
 
 if __name__ == '__main__':
-    dir = '/home/mksnkv/Documents/classification/passport_2class_divided_clean/evaluation/passport/'
+    dir = '/home/mksnkv/Documents/classification/sved_2class_divided_clean/evaluation/sved/'
     directory = dir
     images = os.listdir(directory)
 
