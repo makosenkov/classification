@@ -26,15 +26,21 @@ def showContours(path):
 
     biggest = utils.findBestRectangle(contours1, 0.5, 1.9, 100000, 500000)
     if biggest.size != 0:
-
         cv.drawContours(img, [biggest], 0, (0, 0, 255), 2)
 
-    cv.imshow('contours', img)  # вывод обработанного кадра в окно
+    warped = utils.four_point_transform(img, biggest)
+    # _, warpedThresholded = cv.threshold(warped, 75, 255, cv.THRESH_BINARY | cv.THRESH_OTSU)
+    warpedThresholded = utils.thresholding(warped)
 
+    cv.imshow('contours', img)  # вывод обработанного кадра в окно
+    cv.imshow("warped", warped)
+    cv.imshow("warpedThresh", warpedThresholded)
     cv.waitKey()
     cv.destroyAllWindows()
-    steps = [imgContrasted, imgGray, blur, canny_output, firstDilated, imgWithoutSmallContours, secondDilated, img]
-    labels = ["Contrasted", "Greyscale", "Blurred", "Canny edges", "First dilation", "Removed small contours", "Second dilation", "Bound rectangle"]
+
+    steps = [imgContrasted, imgGray, blur, canny_output, firstDilated, imgWithoutSmallContours, secondDilated, img, warped, warpedThresholded]
+    labels = ["Contrasted", "Greyscale", "Blurred", "Canny edges", "First dilation", "Removed small contours",
+              "Second dilation", "Bound rectangle", "Warped", "Thresholded"]
     utils.plot_all_steps(steps, labels)
 
 
