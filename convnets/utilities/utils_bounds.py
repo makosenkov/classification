@@ -47,8 +47,10 @@ def findBestRectangle(contours, ratio_lb, ratio_rb, area_lb, area_rb):
     return biggest
 
 
-def border_image(img):
+def border_image(img, color):
     bordersize = 15
+    # color = get_dominant_color(img)
+    # color = tuple([int(x) for x in color])
     border = cv.copyMakeBorder(
         img,
         top=bordersize,
@@ -56,7 +58,7 @@ def border_image(img):
         left=bordersize,
         right=bordersize,
         borderType=cv.BORDER_CONSTANT,
-        value=[254, 254, 254]
+        value=color
     )
     img = border
     return img
@@ -93,3 +95,10 @@ def plot_all_steps(imgs, labels):
             plt.imshow(imgs[i], cmap='Greys_r')
     fig.tight_layout()
     plt.show()
+
+
+def get_dominant_color(a):
+    a2D = a.reshape(-1,a.shape[-1])
+    col_range = (256, 256, 256) # generically : a2D.max(0)+1
+    a1D = np.ravel_multi_index(a2D.T, col_range)
+    return np.unravel_index(np.bincount(a1D).argmax(), col_range)

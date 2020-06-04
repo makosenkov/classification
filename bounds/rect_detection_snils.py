@@ -11,7 +11,7 @@ def showContours(path):
         exit(0)
     img = cv.resize(img, (680, 880))
     crop_img = img[30:850, 30:650].copy()
-    imgBordered = utils.border_image(crop_img)
+    imgBordered = utils.border_image(crop_img, [255, 255, 255])
     imgContrasted = utils.adjustContrast(imgBordered)
     imgGray = cv.cvtColor(imgContrasted, cv.COLOR_BGR2GRAY)
     blur = cv.GaussianBlur(imgGray, (5, 5), 1)
