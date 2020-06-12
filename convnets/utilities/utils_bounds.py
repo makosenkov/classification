@@ -27,10 +27,12 @@ def sidesOfBox(box):
     return height, width
 
 
-def findBestRectangle(contours, ratio_lb, ratio_rb, area_lb, area_rb):
+def findBestRectangle(contours, ratio_lb, ratio_rb, img_heigth, img_width):
     biggest = np.array([])
     biggest_area = 0
     biggest_ratio = 0
+    area_lb = 0.15 * img_heigth * img_width
+    area_rb = 0.85 * img_heigth * img_width
     for cnt in contours:
         rect = cv.minAreaRect(cnt)  # пытаемся вписать прямоугольник
         box = cv.boxPoints(rect)  # поиск четырех вершин прямоугольника
@@ -48,8 +50,8 @@ def findBestRectangle(contours, ratio_lb, ratio_rb, area_lb, area_rb):
     return biggest
 
 
-def border_image(img, color):
-    bordersize = 15
+def border_image(img, color, width):
+    bordersize = width
     # color = get_dominant_color(img)
     # color = tuple([int(x) for x in color])
     border = cv.copyMakeBorder(
@@ -69,6 +71,12 @@ def dilate(img, iter):
     kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (4, 4))
     imgDial = cv.dilate(img, kernel, iterations=iter)  # APPLY DILATION
     return imgDial
+
+
+def erode(img, iter):
+    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (2, 2))
+    imageEroded = cv.erode(img, kernel, iterations=iter)
+    return imageEroded
 
 
 def removeSmallContours(contours, image):
@@ -91,7 +99,7 @@ def plot_all_steps(imgs, labels):
         subplot_title = (labels[i])
         axes[-1].set_title(subplot_title)
         plt.axis('off')
-        if i in (0, 7):
+        if i == 7:
             plt.imshow(imgs[i])
         else:
             plt.imshow(imgs[i], cmap='Greys_r')
@@ -164,7 +172,26 @@ def order_points(pts):
     return rect
 
 
-def thresholding(img):
-    imgGray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    thresh = cv.adaptiveThreshold(imgGray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 15, 21)
-    return thresh
+def unsharp_image(img):
+    gaussian_3 = cv.GaussianBlur(img, (9, 9), 10.0)
+    unsharp_image = cv.addWeighted(img, 1.5, gaussian_3, -0.5, 0, img)
+    return unsharp_image
+
+
+def unsharp_text_area(img):
+    gaussian_3 = cv.GaussianBlur(img, (3, 3), 10.0)
+    unsharp_image = cv.addWeighted(img, 1.6, gaussian_3, -0.4, 0, img)
+    return unsharp_image
+
+
+def closing(img):
+    kernel = cv.getStructuringElement(cv.MORPH_RECT, (2, 2))
+    imageEroded = cv.erode(img, kernel, iterations=2)
+    kernel = cv.getStructuringElement(cv.MORPH_RECT, (2, 2))
+    closed = cv.dilate(imageEroded, kernel, iterations=1)  # APPLY DILATION
+    return closed
+
+
+def normalized(img):
+    image = cv.normalize(img, None, 0, 255, norm_type=cv.NORM_MINMAX, dtype=cv.CV_8UC3)
+    return image
