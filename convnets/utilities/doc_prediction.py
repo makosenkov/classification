@@ -51,7 +51,8 @@ def predict_dir(dir, type):
         plt.show()
 
 
-def predict_one(img_path, type):
+def predict_one(weights_path, img_path, type):
+    model = load_model_from_path(weights_path)
     img = KerasImage.load_img(img_path, target_size=(img_width, img_height))
     if img is None:
         print('Could not open image for path:', weights_path)
@@ -61,14 +62,22 @@ def predict_one(img_path, type):
     prediction = model.predict(img)
     if type == 'passport' or type == 'snils' or type == 'sved':
         if prediction > 0.5:
-            return type
+            return True
         else:
-            return 'non-' + type
+            return False
     else:
         if prediction < 0.5:
-            return type
+            return True
         else:
-            return 'non-' + type
+            return False
+
+
+def load_model_from_path(weights_path):
+    model = load_model(weights_path)
+    if model is None:
+        print('Could not load model for path:', weights_path)
+        exit(0)
+    return model
 
 
 if __name__ == '__main__':
@@ -78,7 +87,7 @@ if __name__ == '__main__':
     parser.add_argument('--image', help='Path to one image', required=False)
     args = parser.parse_args()
     type = args.doctype
-    weights_path = '/home/mksnkv/models/top_tuned/vgg16/weights/' + type + '_model_mcp.h5'
+    weights_path = '../../data/weights/' + type + '_model_mcp.h5'
     model = load_model(weights_path)
     if model is None:
         print('Could not load model for path:', weights_path)

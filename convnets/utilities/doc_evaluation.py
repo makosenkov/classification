@@ -25,7 +25,7 @@ def evaluate(model, evaluation_data_dir):
 
 def build_confusion_matrix():
     generator.reset()
-    Y_pred = model.predict_generator(generator, 490)
+    Y_pred = model.predict(generator, 490)
     y_pred = np.where(Y_pred < 0.5, 0, 1)
     # print(Y_pred)
     # print(y_pred)
@@ -42,11 +42,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
     global type
     type = args.doctype
-    weights_path = '/home/mksnkv/models/top_tuned/vgg16/weights/' + type + '_model_mcp.h5'
+    weights_path = '../../data/weights/' + type + '_model_mcp.h5'
     model = load_model(weights_path)
     if model is None:
         print('Could not load model for path:', weights_path)
         exit(0)
-    evaluation_dir = '/home/mksnkv/Documents/classification/for_nikitin/evaluation/' + type
+    evaluation_dir = '../../data/evaluation/' + type
     evaluate(model, evaluation_dir)
     build_confusion_matrix()

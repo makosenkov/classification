@@ -2,20 +2,32 @@ import os
 import cv2 as cv
 from convnets.utilities import utils_bounds as utils
 import numpy as np
-import ocr.text_detection as ocr
-from bounds.noteshrink import noteshrink
+import ocr.text_detection_tesseract as tesseract
+import pprint
 
 img_heigth = 1000
 img_width = 1400
 
 
-def add_contours(img):
-    start_point_issuer = (15, 50)
-    end_point_issuer = (600, 235)
-    color = (255, 0, 0)
-    thickness = 2
-    cropped_rect = img[start_point_issuer[1]:end_point_issuer[1], start_point_issuer[0]:end_point_issuer[0]]
-    # image = cv.rectangle(img.copy(), start_point_issuer, end_point_issuer, color, thickness)
+def crop_header_block(img):
+    start_point = (15, 50)
+    end_point = (600, 235)
+    return crop_block(img, start_point, end_point)
+
+
+def crop_bottom_block(img):
+    start_point = (200, 405)
+    end_point = (550, 750)
+    return crop_block(img, start_point, end_point)
+
+def crop_number_block(img):
+    start_point = (525, 425)
+    end_point = (625, 800)
+    return crop_block(img, start_point, end_point)
+
+
+def crop_block(img, start_point, end_point):
+    cropped_rect = img[start_point[1]:end_point[1], start_point[0]:end_point[0]]
     return cropped_rect
 
 
@@ -40,58 +52,72 @@ def showContours(path):
     withoutBorders = utils.border_image(crop_img, [0, 0, 0], 30)
     firstDilated = utils.dilate(withoutBorders, 4)
 
-    contours0, hierarchy = cv.findContours(firstDilated.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-
+    _, contours0, hierarchy = cv.findContours(firstDilated.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     imgWithoutSmallContours = utils.removeSmallContours(contours0, firstDilated)
     # eroded = utils.erode(imgWithoutSmallContours, 1)
     secondDilated = utils.dilate(imgWithoutSmallContours, 2)
-    contours1, hierarchy = cv.findContours(secondDilated.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    _, contours1, hierarchy = cv.findContours(secondDilated.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     # cv.drawContours(img, contours1, -1, (0, 0, 255), 2)
-    biggest = utils.findBestRectangle(contours1, 0.5, 1.9, img_width, img_heigth)
-    warpedThresholded = blankImage
-    warped = blankImage
-    issuer_area = blankImage
+    biggest = utils.findBestRectangle(contours1, 0.5, 1.9, img_width, img_heigth, 'passport')
+    number_area_unsharpened = blankImage
+    bottom_area_unsharpened = blankImage
+    issuer_area_unsharpened = blankImage
+    resized = blankImage
     if biggest.size != 0:
         cv.drawContours(img, [biggest], 0, (0, 0, 255), 2)
-        warped = utils.four_point_transform(img, biggest)
+        warped = utils.four_point_transform(img, biggest, 'passport')
         resized = cv.resize(warped, (625, 875))
-        issuer_area = add_contours(resized)
-        # issuer_area_resized = cv.resize(issuer_area, None, fx=1.5, fy=1.5, interpolation=cv.INTER_CUBIC)
+
         # issuer_area_contr = utils.adjustContrast(issuer_area_resized)
         # blurred = cv.bilateralFilter(issuer_area_resized, 2, 127, 127)
-        unsharpened = utils.unsharp_text_area(issuer_area)
-        options = dict(quiet=False,
-                       value_threshold=25,
-                       sat_threshold=20,
-                       num_colors=8,
-                       sample_fraction=5,
-                       white_bg=True,
-                       saturate=True)
-        print(options["sample_fraction"])
-        print(options)
-        warpedThresholded = noteshrink.notescan(unsharpened, options)
-        # warpedGray = cv.cvtColor(issuer_area, cv.COLOR_BGR2GRAY)
+        # warpedGray = cv.cvtColor(unsharpened, cv.COLOR_BGR2GRAY)
         # warpedThresholded = noteshrink.illumination_thresholding(issuer_area)
         # normalized = utils.normalized(unsharpened)
-        # warpedThresholded = cv.adaptiveThreshold(warpedGray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 15, 17)
+        # warpedThresholded = cv.adaptiveThreshold(warpedGray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 21, 27)
         # opened = utils.closing(warpedThresholded)
 
     # cv.imshow('contours', img)  # вывод обработанного кадра в окно
-    cv.imshow("warped", warpedThresholded)
+    # cv.imshow("warped", resized)
+    # cv.imshow("header", issuer_area_unsharpened)
+    # cv.imshow("bottom", bottom_area_unsharpened)
     # cv.imshow("warpedThresh", warpedThresholded)
-    cv.waitKey()
-    cv.destroyAllWindows()
+    # cv.waitKey()
+    # cv.destroyAllWindows()
 
-    # steps = [imgGray,  imgContrasted, blur, canny_output, firstDilated, imgWithoutSmallContours, secondDilated, img,
-    #          blankImage, blankImage]
-    # labels = ["Contrasted", "Greyscale", "Blurred", "Canny edges", "First dilation", "Removed small contours",
-    #           "Second dilation", "Bound rectangle", "Warped", "Thresholded"]
+    # steps = [img, imgGray,  imgContrasted, canny_output, firstDilated, imgWithoutSmallContours, secondDilated, img,
+    #          resized, issuer_area_unsharpened, bottom_area_unsharpened, number_area_unsharpened]
+    # labels = ["Image", "Greyscale", "Contrasted", "Canny edges", "First dilation", "Removed small contours",
+    #           "Second dilation", "Bound rectangle", "Warped", "Header", "Bottom", "Number"]
     # utils.plot_all_steps(steps, labels)
-    return warpedThresholded
+    return resized
+
+
+def crop_from_resized(resized):
+    issuer_area = crop_header_block(resized)
+    bottom_area = crop_bottom_block(resized)
+    number_area = crop_number_block(resized)
+    issuer_area_resized = cv.resize(issuer_area, None, fx=1.1, fy=1.1, interpolation=cv.INTER_CUBIC)
+    bottom_area_resized = cv.resize(bottom_area, None, fx=1.1, fy=1.1, interpolation=cv.INTER_CUBIC)
+    number_area_resized = cv.resize(number_area, None, fx=1.1, fy=1.1, interpolation=cv.INTER_CUBIC)
+    issuer_area_unsharpened = utils.unsharp_text_area(issuer_area_resized)
+    bottom_area_unsharpened = utils.unsharp_text_area(bottom_area_resized)
+    number_area_unsharpened = utils.unsharp_text_area(number_area_resized)
+    number_area_unsharpened = cv.rotate(number_area_unsharpened, cv.ROTATE_90_COUNTERCLOCKWISE)
+    return issuer_area_unsharpened, bottom_area_unsharpened, number_area_unsharpened
+
+
+def get_text(img):
+    header, bottom, number = crop_from_resized(img.copy())
+    passport_data = tesseract.get_passport_texts(header, bottom, number)
+    if passport_data['issuer'] is '' or passport_data['birthplace'] is '':
+        resized_rotated = cv.rotate(img, cv.ROTATE_180)
+        header, bottom, number = crop_from_resized(resized_rotated)
+        passport_data = tesseract.get_passport_texts(header, bottom, number)
+    return passport_data
 
 
 if __name__ == '__main__':
-    dir = '/home/mksnkv/Documents/classification/passport_2class_divided_clean/evaluation/passport/'
+    dir = '../data/evaluation/passport/passport/'
     directory = dir
     images = os.listdir(directory)
 
@@ -99,8 +125,9 @@ if __name__ == '__main__':
     imgs = []
     for name in images:
         path = directory + name
-        transformed = showContours(path)
-        ocr.get_gext(transformed)
+        resized = showContours(path)
+        passport_data = get_text(resized)
+        pprint.pprint(passport_data)
 
     # transformed = showContours('imgs/passport6.jpg')
     # ocr.get_gext(transformed)

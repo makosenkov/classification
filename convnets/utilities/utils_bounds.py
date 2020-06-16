@@ -27,12 +27,16 @@ def sidesOfBox(box):
     return height, width
 
 
-def findBestRectangle(contours, ratio_lb, ratio_rb, img_heigth, img_width):
+def findBestRectangle(contours, ratio_lb, ratio_rb, img_heigth, img_width, doctype):
     biggest = np.array([])
     biggest_area = 0
     biggest_ratio = 0
-    area_lb = 0.15 * img_heigth * img_width
-    area_rb = 0.85 * img_heigth * img_width
+    if doctype == 'passport':
+        area_lb = 0.15 * img_heigth * img_width
+        area_rb = 0.85 * img_heigth * img_width
+    elif doctype == 'snils':
+        area_lb = 0.1 * img_heigth * img_width
+        area_rb = 0.85 * img_heigth * img_width
     for cnt in contours:
         rect = cv.minAreaRect(cnt)  # пытаемся вписать прямоугольник
         box = cv.boxPoints(rect)  # поиск четырех вершин прямоугольника
@@ -89,8 +93,8 @@ def removeSmallContours(contours, image):
 
 
 def plot_all_steps(imgs, labels):
-    rows = 2
-    cols = 5
+    rows = 3
+    cols = 4
     axes = []
     fig = plt.figure(figsize=(19.2, 10.8))
 
@@ -99,7 +103,7 @@ def plot_all_steps(imgs, labels):
         subplot_title = (labels[i])
         axes[-1].set_title(subplot_title)
         plt.axis('off')
-        if i == 7:
+        if i == (0, 7, 8, 9, 10, 11):
             plt.imshow(imgs[i])
         else:
             plt.imshow(imgs[i], cmap='Greys_r')
@@ -114,7 +118,7 @@ def get_dominant_color(a):
     return np.unravel_index(np.bincount(a1D).argmax(), col_range)
 
 
-def four_point_transform(image, pts):
+def four_point_transform(image, pts, doctype):
     # obtain a consistent order of the points and unpack them
     # individually
     rect = order_points(pts)
@@ -146,8 +150,12 @@ def four_point_transform(image, pts):
     warped = cv.warpPerspective(image, M, (maxWidth, maxHeight))
     # rotate the warped image if horizontal
     heigth, width, channel = warped.shape
-    if width > heigth:
-        warped = cv.rotate(warped, cv.ROTATE_90_CLOCKWISE)
+    if doctype == 'passport':
+        if width > heigth:
+            warped = cv.rotate(warped, cv.ROTATE_90_CLOCKWISE)
+    elif doctype == 'snils':
+        if heigth > width:
+            warped = cv.rotate(warped, cv.ROTATE_90_CLOCKWISE)
     return warped
 
 
