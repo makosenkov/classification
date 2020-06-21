@@ -98,5 +98,5 @@ if __name__ == '__main__':
     else:
         img = args.image
         if img is not None:
-            prediction = predict_one(img, type)
+            prediction = predict_one(img, weights_path, type)
             print(prediction)
