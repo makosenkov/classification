@@ -1,4 +1,3 @@
-import os
 import cv2 as cv
 import bounds.utils_bounds as utils
 import numpy as np
@@ -78,15 +77,15 @@ def showContours(path):
         # opened = utils.closing(warpedThresholded)
 
     # cv.imshow('contours', img)  # вывод обработанного кадра в окно
-    cv.imshow("warped", resized)
+    # cv.imshow("warped", resized)
     # cv.imshow("header", issuer_area_unsharpened)
     # cv.imshow("bottom", bottom_area_unsharpened)
     # cv.imshow("warpedThresh", dilated_with_borders)
     # cv.imshow("Greyscale", imgWithoutSmallContours)
     # cv.imshow("Contrasted", imgContrasted)
-    cv.waitKey()
-    cv.destroyAllWindows()
-
+    # cv.waitKey()
+    # cv.destroyAllWindows()
+    #
     # steps = [img, imgGray,  imgContrasted, canny_output, firstDilated, imgWithoutSmallContours, img,
     #          resized, issuer_area_unsharpened, bottom_area_unsharpened, number_area_unsharpened, blankImage]
     # labels = ["Image", "Greyscale", "Contrasted", "Canny edges", "First dilation", "Removed small contours",
@@ -99,9 +98,9 @@ def crop_from_resized(resized):
     issuer_area = crop_header_block(resized)
     bottom_area = crop_bottom_block(resized)
     number_area = crop_number_block(resized)
-    issuer_area_resized = cv.resize(issuer_area, None, fx=1.1, fy=1.1, interpolation=cv.INTER_CUBIC)
-    bottom_area_resized = cv.resize(bottom_area, None, fx=1.1, fy=1.1, interpolation=cv.INTER_CUBIC)
-    number_area_resized = cv.resize(number_area, None, fx=1.1, fy=1.1, interpolation=cv.INTER_CUBIC)
+    issuer_area_resized = cv.resize(issuer_area, None, fx=1.2, fy=1.2, interpolation=cv.INTER_CUBIC)
+    bottom_area_resized = cv.resize(bottom_area, None, fx=1.2, fy=1.2, interpolation=cv.INTER_CUBIC)
+    number_area_resized = cv.resize(number_area, None, fx=1.2, fy=1.2, interpolation=cv.INTER_CUBIC)
     issuer_area_unsharpened = utils.unsharp_text_area(issuer_area_resized)
     bottom_area_unsharpened = utils.unsharp_text_area(bottom_area_resized)
     number_area_unsharpened = utils.unsharp_text_area(number_area_resized)

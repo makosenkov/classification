@@ -6,18 +6,15 @@ pytesseract.pytesseract.tesseract_cmd = 'C:/Program Files/Tesseract-OCR/tesserac
 
 
 def get_passport_block_text(image, block_type, dict):
-    # rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     results = pytesseract.image_to_data(image, lang='rus', config='--psm 12', output_type=Output.DICT)
     result_str = ""
     for i in range(0, len(results["text"])):
-        # extract the bounding box coordinates of the text region from
-        # the current result
+
         x = results["left"][i]
         y = results["top"][i]
         w = results["width"][i]
         h = results["height"][i]
-        # extract the OCR text itself along with the confidence of the
-        # text localization
+
         word_text = results["text"][i]
         conf = int(results["conf"][i])
         if conf > 40:
@@ -53,14 +50,14 @@ def get_passport_block_text(image, block_type, dict):
             else:
                 if re.match("^[\d]+$", word_text):
                     dict['number'] += word_text
-            # display the confidence and text to our terminal
+
 
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    # show the output image
+
     print(result_str)
-    cv2.imshow("Image", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow("Image", image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 
 def get_passport_texts(header, bottom, number):
@@ -85,21 +82,16 @@ def get_snils_texts(image):
     results = pytesseract.image_to_data(image, lang='rus', config='--psm 12', output_type=Output.DICT)
     result_str = ""
     for i in range(0, len(results["text"])):
-        # extract the bounding box coordinates of the text region from
-        # the current result
         x = results["left"][i]
         y = results["top"][i]
         w = results["width"][i]
         h = results["height"][i]
-        # extract the OCR text itself along with the confidence of the
-        # text localization
         text = results["text"][i]
         conf = int(results["conf"][i])
         if conf > 40:
             if re.match("[\d-]+", text):
                 result_str += text
         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        # show the output image
     result_str = re.sub(r"[^\d]", "", result_str)
     if len(result_str) > 11:
         result_str = result_str[:11]
