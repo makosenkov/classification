@@ -3,23 +3,6 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 
 
-def adjustContrast(img):
-    lab = cv.cvtColor(img, cv.COLOR_BGR2LAB)
-
-    # -----Splitting the LAB image to different channels-------------------------
-    l, a, b = cv.split(lab)
-
-    # -----Applying CLAHE to L-channel-------------------------------------------
-    clahe = cv.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-    cl = clahe.apply(l)
-
-    # -----Merge the CLAHE enhanced L-channel with the a and b channel-----------
-    limg = cv.merge((cl, a, b))
-
-    # -----Converting image from LAB Color model to RGB model--------------------
-    final = cv.cvtColor(limg, cv.COLOR_LAB2BGR)
-    return final
-
 
 def sidesOfBox(box):
     height = np.sqrt(np.power(box[0][0] - box[3][0], 2) + np.power(box[0][1] - box[3][1], 2))
@@ -111,13 +94,6 @@ def plot_all_steps(imgs, labels):
     plt.show()
 
 
-def get_dominant_color(a):
-    a2D = a.reshape(-1, a.shape[-1])
-    col_range = (256, 256, 256)  # generically : a2D.max(0)+1
-    a1D = np.ravel_multi_index(a2D.T, col_range)
-    return np.unravel_index(np.bincount(a1D).argmax(), col_range)
-
-
 def four_point_transform(image, pts, doctype):
     # obtain a consistent order of the points and unpack them
     # individually
@@ -149,7 +125,7 @@ def four_point_transform(image, pts, doctype):
     M = cv.getPerspectiveTransform(rect, dst)
     warped = cv.warpPerspective(image, M, (maxWidth, maxHeight))
     # rotate the warped image if horizontal
-    heigth, width, channel = warped.shape
+    heigth, width = warped.shape
     if doctype == 'passport':
         if width > heigth:
             warped = cv.rotate(warped, cv.ROTATE_90_CLOCKWISE)
@@ -181,9 +157,20 @@ def order_points(pts):
 
 
 def unsharp_image(img):
+    alpha = 1.3  # Contrast control (1.0-3.0)
+    beta = 0  # Brightness control (0-100)
+
+    unsharped_image = cv.convertScaleAbs(img, alpha=alpha, beta=beta)
+    # gaussian_3 = cv.GaussianBlur(img, (9, 9), 10.0)
+    # unsharped_image = cv.addWeighted(img, 1.5, gaussian_3, -0.5, 0)
+    return unsharped_image
+
+
+def unsharp_image_old(img):
+
     gaussian_3 = cv.GaussianBlur(img, (9, 9), 10.0)
-    unsharp_image = cv.addWeighted(img, 1.5, gaussian_3, -0.5, 0, img)
-    return unsharp_image
+    unsharped_image = cv.addWeighted(img, 1.5, gaussian_3, -0.5, 0)
+    return unsharped_image
 
 
 def unsharp_text_area(img):

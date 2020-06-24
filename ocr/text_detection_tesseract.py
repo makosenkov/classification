@@ -7,7 +7,7 @@ pytesseract.pytesseract.tesseract_cmd = 'C:/Program Files/Tesseract-OCR/tesserac
 
 def get_passport_block_text(image, block_type, dict):
     # rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    results = pytesseract.image_to_data(image, lang='rus', config='--oem 3 --psm 12', output_type=Output.DICT)
+    results = pytesseract.image_to_data(image, lang='rus', config='--psm 12', output_type=Output.DICT)
     result_str = ""
     for i in range(0, len(results["text"])):
         # extract the bounding box coordinates of the text region from
@@ -58,9 +58,9 @@ def get_passport_block_text(image, block_type, dict):
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
     # show the output image
     print(result_str)
-    # cv2.imshow("Image", image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+    cv2.imshow("Image", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 
 def get_passport_texts(header, bottom, number):
@@ -75,11 +75,14 @@ def get_passport_texts(header, bottom, number):
     get_passport_block_text(header, 'header', passport_data)
     get_passport_block_text(bottom, 'bottom', passport_data)
     get_passport_block_text(number, 'number', passport_data)
+    passport_data['issuer'] = passport_data['issuer'].strip()
+    passport_data['fio'] = passport_data['fio'].strip()
+    passport_data['birthplace'] = passport_data['birthplace'].strip()
     return passport_data
 
 
 def get_snils_texts(image):
-    results = pytesseract.image_to_data(image, lang='rus', config='--oem 3 --psm 12', output_type=Output.DICT)
+    results = pytesseract.image_to_data(image, lang='rus', config='--psm 12', output_type=Output.DICT)
     result_str = ""
     for i in range(0, len(results["text"])):
         # extract the bounding box coordinates of the text region from

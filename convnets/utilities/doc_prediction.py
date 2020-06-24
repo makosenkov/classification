@@ -3,10 +3,11 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import classification_report, confusion_matrix
+import time
 from tensorflow.keras.models import *
 from tensorflow.keras.preprocessing import image as KerasImage
 import argparse
+from statistics import mean
 
 img_width, img_height = 224, 224
 
@@ -17,14 +18,18 @@ def predict_dir(dir, type):
     images = os.listdir(dir)
     filenames = []
     imgs = []
+    times = []
+    start_full_loop = time.process_time()
     for name in images:
         path = dir + '/' + name
         img_full = KerasImage.load_img(path)
         img = KerasImage.load_img(path, target_size=(img_width, img_height))
         img = np.expand_dims(img, axis=0)
         img = img / 255
+        start = time.process_time()
         classes = model.predict(img)
         #     print(classes)
+        times.append(time.process_time() - start)
         if type == 'ndfl' or type == 'dover':
             classes = 1 - classes
         if classes < 0.5:
@@ -34,6 +39,13 @@ def predict_dir(dir, type):
             info = str(error_counter) + "/" + str(len(images)) + " name: " + name + " value:" + str(
                 float(classes[0]))
             print(info)
+    print("Full loop: " + str(time.process_time() - start_full_loop))
+    sum = 0
+    for elem in times:
+        sum += elem
+    res = sum / len(times)
+    print("Average for 1 image: " + str(res))
+
 
     dir_split = directory.split("/")
     original_label = dir_split[len(dir_split) - 2]
@@ -51,8 +63,8 @@ def predict_dir(dir, type):
         plt.show()
 
 
-def predict_one(weights_path, img_path, type):
-    model = load_model_from_path(weights_path)
+def predict_one(model, img_path, type):
+    start = time.process_time()
     img = KerasImage.load_img(img_path, target_size=(img_width, img_height))
     if img is None:
         print('Could not open image for path:', weights_path)
@@ -60,6 +72,7 @@ def predict_one(weights_path, img_path, type):
     img = np.expand_dims(img, axis=0)
     img = img / 255
     prediction = model.predict(img)
+    print(time.process_time() - start)
     if type == 'passport' or type == 'snils' or type == 'sved':
         if prediction > 0.5:
             return True
@@ -87,7 +100,7 @@ if __name__ == '__main__':
     parser.add_argument('--image', help='Path to one image', required=False)
     args = parser.parse_args()
     type = args.doctype
-    weights_path = '../../data/weights/' + type + '_model_mcp.h5'
+    weights_path = '../../data/weights/simple/conv3_' + type + '.h5'
     model = load_model(weights_path)
     if model is None:
         print('Could not load model for path:', weights_path)
@@ -98,5 +111,5 @@ if __name__ == '__main__':
     else:
         img = args.image
         if img is not None:
-            prediction = predict_one(img, weights_path, type)
+            prediction = predict_one(model, img, type)
             print(prediction)

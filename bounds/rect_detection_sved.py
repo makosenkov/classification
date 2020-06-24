@@ -1,6 +1,6 @@
 import os
 import cv2 as cv
-from convnets.utilities import utils_bounds as utils
+import bounds.utils_bounds as utils
 
 
 def showContours(path):
@@ -11,7 +11,7 @@ def showContours(path):
         exit(0)
     img = cv.resize(img, (700, 900))
 
-    imgContrasted = utils.adjustContrast(img)
+    imgContrasted = utils.unsharp_image(img)
     imgGray = cv.cvtColor(imgContrasted, cv.COLOR_BGR2GRAY)
     blur = cv.GaussianBlur(imgGray, (5, 5), 1)
     canny_output = cv.Canny(blur, 100, 200)
